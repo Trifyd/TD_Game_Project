@@ -7,10 +7,15 @@ building the game :
 
 bash :
 
+
 cd TD_Game_Project
+
 dotnet new console
+
 dotnet add package Raylib-cs
+
 dotnet restore
+
 
 build 
 
