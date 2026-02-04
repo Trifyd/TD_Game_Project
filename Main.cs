@@ -2,61 +2,103 @@
 using Raylib_cs;
 using System.Numerics;
 using TowerDefense.Core;
-using TowerDefense.World;
+using TowerDefense.Levels;
 using TowerDefense.Enums;
 class Program
 {
     static GameState currentState = GameState.Menu;
+    static Button btnStart = default!;
+    static Button btnEditor = default!;
+    static Button btnExit = default!;
     static void Main()
     {
         WindowManager window = new WindowManager(800, 600, "Tower Defense - From Zero");
-        //will be managable later
+        
         int rows = 15;
         int cols = 20;
         int tileSize = 40;
-        MapManager map = new MapManager(rows, cols, tileSize);
+        MapManager gameMap = new MapManager(rows, cols, tileSize);
+
+        btnStart = new Button(300, 250, 200, 50, "START GAME", Color.DarkGreen);
+        btnEditor = new Button(300, 320, 200, 50, "MAP EDITOR", Color.DarkBlue);
+        btnExit = new Button(300, 390, 200, 50, "EXIT", Color.Maroon);
 
         while (!Raylib.WindowShouldClose())
         {
             if (currentState == GameState.Menu)
             {
-                DrawMenu();
-                if (Raylib.IsKeyPressed(KeyboardKey.Enter))
+                if (currentState == GameState.Menu)
                 {
-                    currentState = GameState.Playing;
+                    if (btnStart.IsClicked())
+                    {
+                        gameMap.InitializeDefaultMap();
+                        currentState = GameState.Playing;
+                    }
+                    if (btnEditor.IsClicked())
+                    {
+                        gameMap.InitializeDefaultMap();
+                        gameMap.LoadLevel("Default"); 
+                        currentState = GameState.Editor;
+                    }
+                    if (btnExit.IsClicked()) break;
                 }
             }
-            else if (currentState == GameState.Playing)
+            window.PrepareFrame();
+
+            switch (currentState)
             {
-                // Game logic
-                Vector2 mouseTile = map.GetTileAtMouse();
+                case GameState.Menu:
+                    DrawMenu();
+                    break;
+                case GameState.Playing:
+                    gameMap.DrawGrid();
+                    break;
+                case GameState.Editor:
+                    gameMap.DrawGrid();
+                    break;
+            }
+
+            if (currentState == GameState.Playing)
+            {
+                Vector2 mouseTile = gameMap.GetTileAtMouse();
                 window.PrepareFrame();
-            
-                map.DrawGrid();
+                gameMap.DrawGrid();
 
                 if (mouseTile.X >= 0 && mouseTile.X < cols && mouseTile.Y >= 0 && mouseTile.Y < rows)
                 {
                     Raylib.DrawRectangle(
-                     (int)mouseTile.X * tileSize, 
-                      (int)mouseTile.Y * tileSize, 
-                        tileSize, tileSize, 
-                        Raylib.Fade(Color.SkyBlue, 0.5f)
+                    (int)mouseTile.X * tileSize, 
+                    (int)mouseTile.Y * tileSize, 
+                    tileSize, tileSize, 
+                    Raylib.Fade(Color.SkyBlue, 0.5f)
                     );
+                }
+            }
+            if (currentState == GameState.Editor)
+            {
+                if (Raylib.IsMouseButtonDown(MouseButton.Left))
+                {
+                    gameMap.UpdateTile(Raylib.GetMousePosition(), TileType.Path);
+                }
+                if (Raylib.IsMouseButtonDown(MouseButton.Right))
+                {
+                    gameMap.UpdateTile(Raylib.GetMousePosition(), TileType.Grass);
                 }
             }
             window.EndFrame();
         }
-
         window.Close();
     }
     static void DrawMenu()
     {
         Raylib.ClearBackground(Color.DarkBlue);
-        
-        int titleWidth = Raylib.MeasureText("TOWER DEFENSE: ZERO", 40);
-        Raylib.DrawText("TOWER DEFENSE: ZERO", (800 - titleWidth) / 2, 200, 40, Color.Yellow);
-        
-        int subWidth = Raylib.MeasureText("Press [ENTER] to Start", 20);
-        Raylib.DrawText("Press [ENTER] to Start", (800 - subWidth) / 2, 300, 20, Color.White);
+        string title = "TOWER DEFENSE: ZERO";
+        int titleFontSize = 40;
+        int titleWidth = Raylib.MeasureText(title, titleFontSize);
+        int titleX = (800 - titleWidth) / 2;
+        Raylib.DrawText(title, titleX, 100, titleFontSize, Color.Yellow);
+        btnStart.Draw();
+        btnEditor.Draw();
+        btnExit.Draw();
     }
 }
