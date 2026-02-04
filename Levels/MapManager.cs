@@ -126,7 +126,6 @@ public class MapManager
         string fullPath = Path.Combine(GetSavePath(), "Default.json");
         if (File.Exists(fullPath)) 
         {
-            LoadLevel("Default");
             return;
         }
         for (int y = 0; y < Rows; y++)
