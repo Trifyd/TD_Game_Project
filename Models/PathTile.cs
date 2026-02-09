@@ -25,11 +25,21 @@ public class PathTile
 
         return Type switch
         {
-            PathType.Start => connectionCount >= 1 && connectionCount <= 3,
-            PathType.End => connectionCount >= 1 && connectionCount <= 3,
-            PathType.Path => connectionCount >= 1 && connectionCount <= 3,
+            PathType.Start => connectionCount >= 1 && connectionCount <= 4,
+            PathType.End => connectionCount >= 1 && connectionCount <= 4,
+            PathType.Path => connectionCount >= 1 && connectionCount <= 4,
             _ => false
         };
+    }
+
+    public int GetInputCount()
+    {
+        return Direction.GetConnectionCount();
+    }
+
+    public int GetOutputCount()
+    {
+        return Direction.GetConnectionCount();
     }
 
     public bool ConnectsTo(PathTile other)

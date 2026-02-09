@@ -38,8 +38,6 @@ public class PathManager
 
         var tile = new PathTile(x, y, type, direction);
         pathTiles[key] = tile;
-
-        // Add to appropriate list
         if (type == PathType.Start)
             startTiles.Add(tile);
         else if (type == PathType.End)

@@ -22,10 +22,24 @@ public static class PathDirectionExtensions
         return count;
     }
 
-    public static bool IsValidConnectionCount(this PathDirection direction, int min = 1, int max = 3)
+    public static bool IsValidConnectionCount(this PathDirection direction, int min = 1, int max = 4)
     {
         int count = direction.GetConnectionCount();
         return count >= min && count <= max;
+    }
+
+    public static bool IsValidForPathType(this PathDirection direction, PathType pathType)
+    {
+        int count = direction.GetConnectionCount();
+        
+        return pathType switch
+        {
+            PathType.Start => count >= 1 && count <= 4,
+            PathType.End => count >= 1 && count <= 4,
+            PathType.Path => count >= 2 && count <= 4,
+            PathType.None => true,
+            _ => false
+        };
     }
     public static PathDirection GetOpposite(this PathDirection direction)
     {

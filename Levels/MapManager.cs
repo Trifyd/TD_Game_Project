@@ -64,7 +64,6 @@ public class MapManager
             int px = pathTile.X * TileSize;
             int py = pathTile.Y * TileSize;
 
-            // Draw type indicator
             Raylib_cs.Color typeColor = pathTile.Type switch
             {
                 PathType.Start => Raylib_cs.Color.Green,
@@ -72,13 +71,9 @@ public class MapManager
                 PathType.Path => Raylib_cs.Color.Yellow,
                 _ => Raylib_cs.Color.White
             };
-
-            // Draw a circle in the center for the type
             int centerX = px + TileSize / 2;
             int centerY = py + TileSize / 2;
             Raylib.DrawCircle(centerX, centerY, TileSize / 6, typeColor);
-
-            // Draw directional arrows
             DrawDirectionalArrows(pathTile, px, py);
         }
     }
@@ -129,39 +124,44 @@ public class MapManager
             );
         }
     }
-    public void UpdateTile(Vector2 mousePos, TileType newType) 
+    private bool IsInBounds(int x, int y)
     {
-        int x = (int)mousePos.X / TileSize;
-        int y = (int)mousePos.Y / TileSize;
-        if (x >= 0 && x < Cols && y >= 0 && y < Rows)
+        return x >= 0 && x < Cols && y >= 0 && y < Rows;
+    }
+    public Vector2 GetTileAtMouse()
+    {
+        Vector2 mousePos = Raylib.GetMousePosition();
+        var (x, y) = ScreenToGrid(mousePos);
+        return new Vector2(x, y);
+    }
+    private (int x, int y) ScreenToGrid(Vector2 screenPos)
+    {
+        int x = (int)screenPos.X / TileSize;
+        int y = (int)screenPos.Y / TileSize;
+        return (x, y);
+    }
+
+    public void UpdateTile(Vector2 mousePos, TileType newType)
+    {
+        var (x, y) = ScreenToGrid(mousePos);
+        if (IsInBounds(x, y))
         {
             grid[x, y] = newType;
         }
     }
-    public Vector2 GetTileAtMouse() //a fusioner
-    {
-        Vector2 mousePos = Raylib.GetMousePosition();
-        int x = (int)mousePos.X / TileSize;
-        int y = (int)mousePos.Y / TileSize;
-        return new Vector2(x, y);
-    }
 
     public void SetPathTile(Vector2 mousePos, PathType pathType)
     {
-        int x = (int)mousePos.X / TileSize;
-        int y = (int)mousePos.Y / TileSize;
+        var (x, y) = ScreenToGrid(mousePos);
         
-        if (x >= 0 && x < Cols && y >= 0 && y < Rows)
+        if (IsInBounds(x, y))
         {
-            // Set the base tile to Path
             grid[x, y] = TileType.Path;
             
-            // Add/update path tile
             PathManager.SetPathTile(x, y, pathType, PathDirection.None);
             
             // Auto-detect direction based on neighbors
             PathManager.AutoSetDirection(x, y);
-            
             // Update neighboring tiles' directions
             PathManager.AutoSetDirection(x - 1, y);
             PathManager.AutoSetDirection(x + 1, y);
@@ -172,14 +172,12 @@ public class MapManager
     
     public void RemovePathTile(Vector2 mousePos)
     {
-        int x = (int)mousePos.X / TileSize;
-        int y = (int)mousePos.Y / TileSize;
+        var (x, y) = ScreenToGrid(mousePos);
         
-        if (x >= 0 && x < Cols && y >= 0 && y < Rows)
+        if (IsInBounds(x, y))
         {
             PathManager.RemovePathTile(x, y);
             
-            // Update neighboring tiles' directions
             PathManager.AutoSetDirection(x - 1, y);
             PathManager.AutoSetDirection(x + 1, y);
             PathManager.AutoSetDirection(x, y - 1);
@@ -247,6 +245,7 @@ public class MapManager
                     grid[x, y] = data.Tiles[index++];
                 }
             }
+            PathManager.Clear();
             foreach (var pathData in data.PathTiles)
             {
                 PathManager.SetPathTile(pathData.X, pathData.Y, pathData.Type, pathData.Direction);
