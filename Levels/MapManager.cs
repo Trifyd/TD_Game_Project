@@ -5,7 +5,6 @@ using System.IO;
 using System.Numerics;
 using TowerDefense.Enums;
 using TowerDefense.Models;
-using System.Drawing;
 
 public class MapManager
 {
@@ -13,6 +12,7 @@ public class MapManager
     public int Cols { get; private set; }
     public int TileSize { get; private set; }
     private TileType[,] grid;
+    public PathManager PathManager { get; private set; }
     
     public MapManager(int rows, int cols, int tileSize)
     {
@@ -20,6 +20,7 @@ public class MapManager
         Cols = cols;
         TileSize = tileSize;
         grid = new TileType[cols, rows];
+        PathManager = new PathManager();
         ClearMap(TileType.Grass);
     }
     public void ClearMap(TileType type)
@@ -31,6 +32,7 @@ public class MapManager
                 grid[x, y] = type;
             }
         }
+        PathManager.Clear();
     }
     public void DrawGrid()
     {
@@ -53,8 +55,81 @@ public class MapManager
                 Raylib.DrawRectangleLines(x * TileSize, y * TileSize, TileSize, TileSize, Raylib_cs.Color.Black);
             }
         }
+        DrawPathTiles();
     }
-    public void UpdateTile(Vector2 mousePos, TileType newType) //a fusioner
+     private void DrawPathTiles()
+    {
+        foreach (var pathTile in PathManager.GetAllPathTiles())
+        {
+            int px = pathTile.X * TileSize;
+            int py = pathTile.Y * TileSize;
+
+            // Draw type indicator
+            Raylib_cs.Color typeColor = pathTile.Type switch
+            {
+                PathType.Start => Raylib_cs.Color.Green,
+                PathType.End => Raylib_cs.Color.Red,
+                PathType.Path => Raylib_cs.Color.Yellow,
+                _ => Raylib_cs.Color.White
+            };
+
+            // Draw a circle in the center for the type
+            int centerX = px + TileSize / 2;
+            int centerY = py + TileSize / 2;
+            Raylib.DrawCircle(centerX, centerY, TileSize / 6, typeColor);
+
+            // Draw directional arrows
+            DrawDirectionalArrows(pathTile, px, py);
+        }
+    }
+
+    private void DrawDirectionalArrows(PathTile tile, int px, int py)
+    {
+        int centerX = px + TileSize / 2;
+        int centerY = py + TileSize / 2;
+        int arrowLength = TileSize / 3;
+
+        if ((tile.Direction & PathDirection.Left) != 0)
+        {
+            Raylib.DrawLineEx(
+                new Vector2(centerX, centerY),
+                new Vector2(px + 5, centerY),
+                2,
+                Raylib_cs.Color.White
+            );
+        }
+
+        if ((tile.Direction & PathDirection.Right) != 0)
+        {
+            Raylib.DrawLineEx(
+                new Vector2(centerX, centerY),
+                new Vector2(px + TileSize - 5, centerY),
+                2,
+                Raylib_cs.Color.White
+            );
+        }
+
+        if ((tile.Direction & PathDirection.Up) != 0)
+        {
+            Raylib.DrawLineEx(
+                new Vector2(centerX, centerY),
+                new Vector2(centerX, py + 5),
+                2,
+                Raylib_cs.Color.White
+            );
+        }
+
+        if ((tile.Direction & PathDirection.Down) != 0)
+        {
+            Raylib.DrawLineEx(
+                new Vector2(centerX, centerY),
+                new Vector2(centerX, py + TileSize - 5),
+                2,
+                Raylib_cs.Color.White
+            );
+        }
+    }
+    public void UpdateTile(Vector2 mousePos, TileType newType) 
     {
         int x = (int)mousePos.X / TileSize;
         int y = (int)mousePos.Y / TileSize;
@@ -69,6 +144,47 @@ public class MapManager
         int x = (int)mousePos.X / TileSize;
         int y = (int)mousePos.Y / TileSize;
         return new Vector2(x, y);
+    }
+
+    public void SetPathTile(Vector2 mousePos, PathType pathType)
+    {
+        int x = (int)mousePos.X / TileSize;
+        int y = (int)mousePos.Y / TileSize;
+        
+        if (x >= 0 && x < Cols && y >= 0 && y < Rows)
+        {
+            // Set the base tile to Path
+            grid[x, y] = TileType.Path;
+            
+            // Add/update path tile
+            PathManager.SetPathTile(x, y, pathType, PathDirection.None);
+            
+            // Auto-detect direction based on neighbors
+            PathManager.AutoSetDirection(x, y);
+            
+            // Update neighboring tiles' directions
+            PathManager.AutoSetDirection(x - 1, y);
+            PathManager.AutoSetDirection(x + 1, y);
+            PathManager.AutoSetDirection(x, y - 1);
+            PathManager.AutoSetDirection(x, y + 1);
+        }
+    }
+    
+    public void RemovePathTile(Vector2 mousePos)
+    {
+        int x = (int)mousePos.X / TileSize;
+        int y = (int)mousePos.Y / TileSize;
+        
+        if (x >= 0 && x < Cols && y >= 0 && y < Rows)
+        {
+            PathManager.RemovePathTile(x, y);
+            
+            // Update neighboring tiles' directions
+            PathManager.AutoSetDirection(x - 1, y);
+            PathManager.AutoSetDirection(x + 1, y);
+            PathManager.AutoSetDirection(x, y - 1);
+            PathManager.AutoSetDirection(x, y + 1);
+        }
     }
     private string GetSavePath()
     {
@@ -89,11 +205,23 @@ public class MapManager
             LevelName = fileName,
             Width = Cols,
             Height = Rows,
-            Tiles = new List<TileType>()
+            Tiles = new List<TileType>(),
+            PathTiles = new List<PathTileData>()
         };
         for (int y = 0; y < Rows; y++)
             for (int x = 0; x < Cols; x++)
                 data.Tiles.Add(grid[x, y]);
+
+        foreach (var pathTile in PathManager.GetAllPathTiles())
+        {
+            data.PathTiles.Add(new PathTileData
+            {
+                X = pathTile.X,
+                Y = pathTile.Y,
+                Type = pathTile.Type,
+                Direction = pathTile.Direction
+            });
+        }
         string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(fullPath, json);
         Console.WriteLine($"Map saved to: {fullPath}");
@@ -119,6 +247,10 @@ public class MapManager
                     grid[x, y] = data.Tiles[index++];
                 }
             }
+            foreach (var pathData in data.PathTiles)
+            {
+                PathManager.SetPathTile(pathData.X, pathData.Y, pathData.Type, pathData.Direction);
+            }
         }
     }
     public void InitializeDefaultMap()
@@ -135,6 +267,13 @@ public class MapManager
         for (int x = 0; x < Cols; x++)
         {
             grid[x, middleRow] = TileType.Path;
+        }
+
+        PathManager.SetPathTile(0, middleRow, PathType.Start, PathDirection.Right);
+        PathManager.SetPathTile(Cols - 1, middleRow, PathType.End, PathDirection.Left);
+        for (int x = 1; x < Cols - 1; x++)
+        {
+            PathManager.SetPathTile(x, middleRow, PathType.Path, PathDirection.Left | PathDirection.Right);
         }
         SaveLevel("Default");
     }
