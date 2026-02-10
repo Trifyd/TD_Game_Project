@@ -8,15 +8,13 @@ public class GameManager
 {
     public GameState CurrentState { get; private set; } = GameState.Menu;
     public TileType CurrentBrush { get; private set; } = TileType.Grass;
-    
     private readonly MapManager _mapManager;
     private readonly CursorControl _cursor;
     private readonly Button _btnStart;
     private readonly Button _btnEditor;
     private readonly Button _btnExit;
     private readonly PopupManager _popupManager;
-    // init gamemanger
-    public GameManager(MapManager mapManager, CursorControl cursor, Button btnStart, Button btnEditor, Button btnExit)
+    public GameManager(MapManager mapManager, CursorControl cursor, Button btnStart, Button btnEditor, Button btnExit)  // init gamemanger
     {
         _mapManager = mapManager;
         _mapManager.InitializeDefaultMap();
@@ -27,7 +25,6 @@ public class GameManager
         _popupManager = new PopupManager(); // init Popup manager
         Raylib.SetExitKey(KeyboardKey.Equal); // change exit key
     }
-
     public bool Update()
     {
         if (_popupManager.IsVisible)
@@ -36,7 +33,6 @@ public class GameManager
             return true;
         }
         _cursor.Update();
-
         switch (CurrentState)
         {
             case GameState.Menu:
@@ -71,7 +67,6 @@ public class GameManager
             );
         }
     }
-
     private bool HandleMenuInput() // start menu input
     {
         if (_btnStart.IsClicked())
@@ -96,6 +91,22 @@ public class GameManager
         }
         else if (_btnEditor.IsClicked())
         {
+            _popupManager.ShowMapInput(
+                "Default",
+                (mapName)=>
+                {
+                    if (!string.IsNullOrWhiteSpace(mapName)) //dynamic map choice
+                    {
+                        _mapManager.LoadLevel(mapName);
+                        _popupManager.Show(
+                            "Success",
+                            $"Map '{mapName}' loaded successfully!",
+                            new PopupButton("OK", Color.DarkGreen, () => { })
+                        );
+                    }
+                },
+                () => { } 
+            );
             CurrentState = GameState.Editor;
         }
         else if (_btnExit.IsClicked()) // exit
@@ -104,7 +115,6 @@ public class GameManager
         }
         return true;
     }
-
     private void HandleEditorInput() // editor state input
     {
         if (Raylib.IsMouseButtonDown(MouseButton.Left)) // chosen tile in brush
@@ -149,7 +159,6 @@ public class GameManager
             );
         }
     }
-
     private void CycleBrush(float wheelDirection) // brush choice function
     {
         var tileTypes = Enum.GetValues<TileType>();
@@ -164,31 +173,26 @@ public class GameManager
         }
         CurrentBrush = tileTypes[currentIndex];
     }
-
     public void Draw() // display by state
     {
         switch (CurrentState)
         {
             case GameState.Menu:
                 DrawMenu();
-                Raylib.ShowCursor();
                 break;
             case GameState.Playing:
-                Raylib.ShowCursor();
                 DrawPlayingState();
                 break;
             case GameState.Editor:
-                Raylib.HideCursor();
                 DrawEditorState();
                 break;
         }
         _popupManager.Draw();
     }
-
     private void DrawMenu() // menu state display
     {
         Raylib.ClearBackground(Color.DarkBlue);
-        
+        _cursor.DrawHoverPreview(CurrentState, CurrentBrush);
         string title = "TOWER DEFENSE: ZERO";
         int titleFontSize = 40;
         int titleWidth = Raylib.MeasureText(title, titleFontSize);
@@ -200,11 +204,10 @@ public class GameManager
         _btnEditor.Draw();
         _btnExit.Draw();
     }
-
     private void DrawPlayingState() // playing state display
     {
         _mapManager.DrawGrid();
-        
+        _cursor.DrawHoverPreview(CurrentState, CurrentBrush);
         Vector2 mouseTile = _cursor.GetTilePosition();
         int tileSize = _mapManager.TileSize;
         
@@ -220,14 +223,12 @@ public class GameManager
             );
         }
     }
-
     private void DrawEditorState() // editor state display
     {
         _mapManager.DrawGrid();
         _cursor.DrawHoverPreview(CurrentState, CurrentBrush);
         DrawEditorUI();
     }
-
     private void DrawEditorUI() // editor state instruction and brush
     {
         Raylib.DrawRectangle(5, 5, 200, 30, Raylib.Fade(Color.Black, 0.7f));

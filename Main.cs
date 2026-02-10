@@ -11,8 +11,8 @@ class Program
         int rows = 15;
         int cols = 20;
         int tileSize = 40;
-        MapManager gameMap = new MapManager(rows, cols, tileSize);
         CursorControl cursor = new CursorControl(tileSize);
+        MapManager gameMap = new MapManager(rows, cols, tileSize);
         Button btnStart = new Button(300, 250, 200, 50, "START GAME", Color.DarkGreen);
         Button btnEditor = new Button(300, 320, 200, 50, "MAP EDITOR", Color.DarkBlue);
         Button btnExit = new Button(300, 390, 200, 50, "EXIT", Color.Maroon);

@@ -94,11 +94,9 @@ public class PopupManager
     }
     public void ShowTowerSelection(Action<string> onTowerSelected) // tower selection popup
     {
-        
     }
     public void ShowUpgradeTowerSelection(Action<string> onTowerUpraded) // tower upgrade popup
     {
-        
     }
     public void ShowError(string errorMessage) // error popup (will be upgraded when loggin system is in place)
     {
@@ -228,7 +226,6 @@ public class PopupManager
         }
     }
 }
-
 public class PopupButton
 {
     private Rectangle _bounds;
@@ -236,9 +233,7 @@ public class PopupButton
     private readonly Color _baseColor;
     private Color _hoverColor;
     private bool _isHovered;
-    
     public Action? OnClick { get; set; }
-
     public PopupButton(string text, Color baseColor, Action? onClick = null) //init popup buttons
     {
         _text = text;
@@ -262,12 +257,10 @@ public class PopupButton
     {
         Raylib.DrawRectangleRec(_bounds, _isHovered ? _hoverColor : _baseColor);
         Raylib.DrawRectangleLinesEx(_bounds, 2, Color.Black);
-        
         int fontSize = 20;
         int textWidth = Raylib.MeasureText(_text, fontSize);
         float textX = _bounds.X + (_bounds.Width - textWidth) / 2;
         float textY = _bounds.Y + (_bounds.Height - fontSize) / 2;
-        
         Raylib.DrawText(_text, (int)textX, (int)textY, fontSize, Color.White);
     }
 }
