@@ -11,16 +11,14 @@ public class PopupManager
     private Rectangle _popupRect;
     private Color _backgroundColor;
     private Color _titleColor;
-    
     private bool _hasInputField;
     private string _inputText;
     private Rectangle _inputRect;
     private bool _inputActive;
     private int _maxInputLength;
-
     public bool IsVisible => _isVisible;
     public string InputText => _inputText;
-
+    // init popup
     public PopupManager()
     {
         _isVisible = false;
@@ -34,11 +32,11 @@ public class PopupManager
         _inputActive = false;
         _maxInputLength = 30;
     }
-    public void Show(string title, string message, params PopupButton[] buttons)
+    public void Show(string title, string message, params PopupButton[] buttons) // base popup
     {
         Show(title, message, false, "", buttons);
     }
-    public void Show(string title, string message, bool hasInputField, string defaultInputText, params PopupButton[] buttons)
+    public void Show(string title, string message, bool hasInputField, string defaultInputText, params PopupButton[] buttons) //dynamic popup
     {
         _isVisible = true;
         _title = title;
@@ -47,20 +45,15 @@ public class PopupManager
         _hasInputField = hasInputField;
         _inputText = defaultInputText;
         _inputActive = hasInputField;
-
         int popupWidth = 400;
         int popupHeight = 200 + (_buttons.Count * 60);
-
         if (_hasInputField)
         {
             popupHeight += 60;
         }
-        
         int popupX = (800 - popupWidth) / 2;
         int popupY = (600 - popupHeight) / 2;
-        
         _popupRect = new Rectangle(popupX, popupY, popupWidth, popupHeight);
-        
         if (_hasInputField)
         {
             _inputRect = new Rectangle(
@@ -70,7 +63,6 @@ public class PopupManager
                 40
             );
         }
-        
         float buttonY = popupY + (_hasInputField ? 180 : 120);
         foreach (var button in _buttons)
         {
@@ -78,8 +70,7 @@ public class PopupManager
             buttonY += 60;
         }
     }
-
-    public void ShowSaveInput(string defaultName, Action<string> onSave, Action onCancel)
+    public void ShowSaveInput(string defaultName, Action<string> onSave, Action onCancel) // save popup
     {
         Show(
             "Save Map",
@@ -90,7 +81,7 @@ public class PopupManager
             new PopupButton("Cancel", Color.Maroon, onCancel)
         );
     }
-    public void ShowMapInput(string defaultName, Action<string> onLoad, Action onCancel)
+    public void ShowMapInput(string defaultName, Action<string> onLoad, Action onCancel) // map selection popup
     {
         Show(
             "Choose a Map",
@@ -101,13 +92,15 @@ public class PopupManager
             new PopupButton("Cancel", Color.Maroon, onCancel)
         );
     }
-
-    public void ShowTowerSelection(Action<string> onTowerSelected)
+    public void ShowTowerSelection(Action<string> onTowerSelected) // tower selection popup
     {
         
     }
-
-    public void ShowError(string errorMessage)
+    public void ShowUpgradeTowerSelection(Action<string> onTowerUpraded) // tower upgrade popup
+    {
+        
+    }
+    public void ShowError(string errorMessage) // error popup (will be upgraded when loggin system is in place)
     {
         Show(
             "Error",
@@ -115,8 +108,7 @@ public class PopupManager
             new PopupButton("OK", Color.Maroon, () => Hide())
         );
     }
-
-    public void ShowConfirmation(string title, string message, Action onYes, Action onNo)
+    public void ShowConfirmation(string title, string message, Action onYes, Action onNo) // confirmation popup
     {
         Show(
             title,
@@ -125,15 +117,13 @@ public class PopupManager
             new PopupButton("No", Color.Maroon, onNo)
         );
     }
-
-    public void Hide()
+    public void Hide() // hide popup
     {
         _isVisible = false;
         _hasInputField = false;
         _inputText = "";
         _inputActive = false;
     }
-
     public void Update()
     {
         if (!_isVisible) return;
@@ -179,8 +169,7 @@ public class PopupManager
             Hide();
         }
     }
-
-    public void Draw()
+    public void Draw() // popup display
     {
         if (!_isVisible) return;
         // Darken background
@@ -212,8 +201,7 @@ public class PopupManager
             button.Draw();
         }
     }
-
-    private void DrawWrappedText(string text, int x, int y, int maxWidth, int fontSize, Color color)
+    private void DrawWrappedText(string text, int x, int y, int maxWidth, int fontSize, Color color) // text return line if too long
     {
         string[] words = text.Split(' ');
         string currentLine = "";
@@ -223,7 +211,6 @@ public class PopupManager
         {
             string testLine = currentLine + (currentLine.Length > 0 ? " " : "") + word;
             int lineWidth = Raylib.MeasureText(testLine, fontSize);
-
             if (lineWidth > maxWidth && currentLine.Length > 0)
             {
                 Raylib.DrawText(currentLine, x, currentY, fontSize, color);
@@ -235,7 +222,6 @@ public class PopupManager
                 currentLine = testLine;
             }
         }
-
         if (currentLine.Length > 0)
         {
             Raylib.DrawText(currentLine, x, currentY, fontSize, color);
@@ -253,7 +239,7 @@ public class PopupButton
     
     public Action? OnClick { get; set; }
 
-    public PopupButton(string text, Color baseColor, Action? onClick = null)
+    public PopupButton(string text, Color baseColor, Action? onClick = null) //init popup buttons
     {
         _text = text;
         _baseColor = baseColor;
@@ -261,21 +247,18 @@ public class PopupButton
         _bounds = new Rectangle(0, 0, 300, 50);
         OnClick = onClick;
     }
-
-    public void SetPosition(float x, float y)
+    public void SetPosition(float x, float y) //button position 
     {
         _bounds.X = x;
         _bounds.Y = y;
     }
-
-    public bool IsClicked()
+    public bool IsClicked() // button action
     {
         Vector2 mousePoint = Raylib.GetMousePosition();
         _isHovered = Raylib.CheckCollisionPointRec(mousePoint, _bounds);
         return _isHovered && Raylib.IsMouseButtonPressed(MouseButton.Left);
     }
-
-    public void Draw()
+    public void Draw() // display popup button
     {
         Raylib.DrawRectangleRec(_bounds, _isHovered ? _hoverColor : _baseColor);
         Raylib.DrawRectangleLinesEx(_bounds, 2, Color.Black);

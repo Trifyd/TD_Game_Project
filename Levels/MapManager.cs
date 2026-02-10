@@ -13,8 +13,7 @@ public class MapManager
     public int TileSize { get; private set; }
     private TileType[,] grid;
     public PathManager PathManager { get; private set; }
-    
-    public MapManager(int rows, int cols, int tileSize)
+    public MapManager(int rows, int cols, int tileSize) // init mapmanager 
     {
         Rows = rows;
         Cols = cols;
@@ -23,7 +22,7 @@ public class MapManager
         PathManager = new PathManager();
         ClearMap(TileType.Grass);
     }
-    public void ClearMap(TileType type)
+    public void ClearMap(TileType type) // clear map
     {
         for (int y = 0; y < Rows; y++)
         {
@@ -34,7 +33,7 @@ public class MapManager
         }
         PathManager.Clear();
     }
-    public void DrawGrid()
+    public void DrawGrid() // display tile grid
     {
         for (int y = 0; y < Rows; y++)
         {
@@ -57,7 +56,7 @@ public class MapManager
         }
         DrawPathTiles();
     }
-     private void DrawPathTiles()
+    private void DrawPathTiles() // display path
     {
         foreach (var pathTile in PathManager.GetAllPathTiles())
         {
@@ -77,13 +76,11 @@ public class MapManager
             DrawDirectionalArrows(pathTile, px, py);
         }
     }
-
-    private void DrawDirectionalArrows(PathTile tile, int px, int py)
+    private void DrawDirectionalArrows(PathTile tile, int px, int py) // display path direction
     {
         int centerX = px + TileSize / 2;
         int centerY = py + TileSize / 2;
         int arrowLength = TileSize / 3;
-
         if ((tile.Direction & PathDirection.Left) != 0)
         {
             Raylib.DrawLineEx(
@@ -93,7 +90,6 @@ public class MapManager
                 Raylib_cs.Color.White
             );
         }
-
         if ((tile.Direction & PathDirection.Right) != 0)
         {
             Raylib.DrawLineEx(
@@ -103,7 +99,6 @@ public class MapManager
                 Raylib_cs.Color.White
             );
         }
-
         if ((tile.Direction & PathDirection.Up) != 0)
         {
             Raylib.DrawLineEx(
@@ -113,7 +108,6 @@ public class MapManager
                 Raylib_cs.Color.White
             );
         }
-
         if ((tile.Direction & PathDirection.Down) != 0)
         {
             Raylib.DrawLineEx(
@@ -124,24 +118,17 @@ public class MapManager
             );
         }
     }
-    private bool IsInBounds(int x, int y)
+    private bool IsInBounds(int x, int y) // is cord in the game window
     {
         return x >= 0 && x < Cols && y >= 0 && y < Rows;
     }
-    public Vector2 GetTileAtMouse()
-    {
-        Vector2 mousePos = Raylib.GetMousePosition();
-        var (x, y) = ScreenToGrid(mousePos);
-        return new Vector2(x, y);
-    }
-    private (int x, int y) ScreenToGrid(Vector2 screenPos)
+    private (int x, int y) ScreenToGrid(Vector2 screenPos) // translate screen cord to tile cord
     {
         int x = (int)screenPos.X / TileSize;
         int y = (int)screenPos.Y / TileSize;
         return (x, y);
     }
-
-    public void UpdateTile(Vector2 mousePos, TileType newType)
+    public void UpdateTile(Vector2 mousePos, TileType newType) // update tile type
     {
         var (x, y) = ScreenToGrid(mousePos);
         if (IsInBounds(x, y))
@@ -149,17 +136,14 @@ public class MapManager
             grid[x, y] = newType;
         }
     }
-
-    public void SetPathTile(Vector2 mousePos, PathType pathType)
+    public void SetPathTile(Vector2 mousePos, PathType pathType) // set path tile data
     {
         var (x, y) = ScreenToGrid(mousePos);
         
         if (IsInBounds(x, y))
         {
             grid[x, y] = TileType.Path;
-            
             PathManager.SetPathTile(x, y, pathType, PathDirection.None);
-            
             // Auto-detect direction based on neighbors
             PathManager.AutoSetDirection(x, y);
             // Update neighboring tiles' directions
@@ -169,22 +153,19 @@ public class MapManager
             PathManager.AutoSetDirection(x, y + 1);
         }
     }
-    
-    public void RemovePathTile(Vector2 mousePos)
+    public void RemovePathTile(Vector2 mousePos) // remove path tile data
     {
         var (x, y) = ScreenToGrid(mousePos);
-        
         if (IsInBounds(x, y))
         {
             PathManager.RemovePathTile(x, y);
-            
             PathManager.AutoSetDirection(x - 1, y);
             PathManager.AutoSetDirection(x + 1, y);
             PathManager.AutoSetDirection(x, y - 1);
             PathManager.AutoSetDirection(x, y + 1);
         }
     }
-    private string GetSavePath()
+    private string GetSavePath() // save path (no need to hardcode it for all os thnaks god)
     {
         string baseDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         string saveDir = Path.Combine(baseDir, "TowerDefenseZero", "Maps");
@@ -194,8 +175,7 @@ public class MapManager
         }
         return saveDir;
     }
-
-    public void SaveLevel(string fileName)
+    public void SaveLevel(string fileName) // save a level to local data
     {
         string fullPath = Path.Combine(GetSavePath(), fileName + ".json");
         var data = new LevelData
@@ -209,7 +189,6 @@ public class MapManager
         for (int y = 0; y < Rows; y++)
             for (int x = 0; x < Cols; x++)
                 data.Tiles.Add(grid[x, y]);
-
         foreach (var pathTile in PathManager.GetAllPathTiles())
         {
             data.PathTiles.Add(new PathTileData
@@ -224,8 +203,7 @@ public class MapManager
         File.WriteAllText(fullPath, json);
         Console.WriteLine($"Map saved to: {fullPath}");
     }
-
-    public void LoadLevel(string fileName)
+    public void LoadLevel(string fileName) // load local level
     {
         string fullPath = Path.Combine(GetSavePath(), fileName + ".json");
         if (!File.Exists(fullPath)) 
@@ -252,7 +230,7 @@ public class MapManager
             }
         }
     }
-    public void InitializeDefaultMap()
+    public void InitializeDefaultMap() // base hardcoded map
     {
         string fullPath = Path.Combine(GetSavePath(), "Default.json");
         if (File.Exists(fullPath)) 
@@ -267,7 +245,6 @@ public class MapManager
         {
             grid[x, middleRow] = TileType.Path;
         }
-
         PathManager.SetPathTile(0, middleRow, PathType.Start, PathDirection.Right);
         PathManager.SetPathTile(Cols - 1, middleRow, PathType.End, PathDirection.Left);
         for (int x = 1; x < Cols - 1; x++)

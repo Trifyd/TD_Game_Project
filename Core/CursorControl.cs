@@ -10,21 +10,26 @@ public class CursorControl
     public int GridX { get; private set; }
     public int GridY { get; private set; }
     private int _tileSize;
-
-    public CursorControl(int tileSize)
+    public CursorControl(int tileSize) // init cursor control
     {
         _tileSize = tileSize;
         Raylib.HideCursor();
     }
-
-    public void Update()
+    public void Update() // update cursor position
     {
         ScreenPos = Raylib.GetMousePosition();
         GridX = (int)ScreenPos.X / _tileSize;
         GridY = (int)ScreenPos.Y / _tileSize;
     }
-
-    public void DrawHoverPreview(GameState state, TileType currentBrush)
+    public Vector2 GetTilePosition() // mouse the tile is hovering
+    {
+        return new Vector2(GridX, GridY);
+    }
+    public bool IsInBounds(int maxCols, int maxRows) // is the cursor in the game window
+    {
+        return GridX >= 0 && GridX < maxCols && GridY >= 0 && GridY < maxRows;
+    }
+    public void DrawHoverPreview(GameState state, TileType currentBrush) // cursor brush tile hover preview
     {
         if (state == GameState.Editor)
         {
@@ -37,8 +42,7 @@ public class CursorControl
         }
         Raylib.DrawCircleV(ScreenPos, 4, Color.White);
     }
-
-    private static Color GetColorForTile(TileType type)
+    private static Color GetColorForTile(TileType type) // tile type colors
     {
         return type switch
         {

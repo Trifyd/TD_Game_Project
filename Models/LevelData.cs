@@ -8,7 +8,6 @@ public class LevelData
     public int Height { get; set; }
     // A flat list of all tiles
     public List<TileType> Tiles { get; set; } = new();
-    
     public List<PathTileData> PathTiles { get; set; } = new();
 }
 

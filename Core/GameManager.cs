@@ -15,7 +15,7 @@ public class GameManager
     private readonly Button _btnEditor;
     private readonly Button _btnExit;
     private readonly PopupManager _popupManager;
-
+    // init gamemanger
     public GameManager(MapManager mapManager, CursorControl cursor, Button btnStart, Button btnEditor, Button btnExit)
     {
         _mapManager = mapManager;
@@ -24,8 +24,8 @@ public class GameManager
         _btnStart = btnStart;
         _btnEditor = btnEditor;
         _btnExit = btnExit;
-        _popupManager = new PopupManager();
-        Raylib.SetExitKey(KeyboardKey.Equal);
+        _popupManager = new PopupManager(); // init Popup manager
+        Raylib.SetExitKey(KeyboardKey.Equal); // change exit key
     }
 
     public bool Update()
@@ -48,14 +48,13 @@ public class GameManager
                 HandlePlayingInput();
                 break;
         }
-
         return true;
     }
-    public void HandlePlayingInput()
+    public void HandlePlayingInput() // playing state input
     {
         if (Raylib.IsMouseButtonPressed(MouseButton.Left))
         {
-            Vector2 mouseTile = _mapManager.GetTileAtMouse();
+            Vector2 mouseTile = _cursor.GetTilePosition();
             if (mouseTile.X >= 0 && mouseTile.X < _mapManager.Cols && 
                 mouseTile.Y >= 0 && mouseTile.Y < _mapManager.Rows)
             {
@@ -73,7 +72,7 @@ public class GameManager
         }
     }
 
-    private bool HandleMenuInput()
+    private bool HandleMenuInput() // start menu input
     {
         if (_btnStart.IsClicked())
         {
@@ -81,7 +80,7 @@ public class GameManager
                 "Default",
                 (mapName)=>
                 {
-                    if (!string.IsNullOrWhiteSpace(mapName))
+                    if (!string.IsNullOrWhiteSpace(mapName)) //dynamic map choice
                     {
                         _mapManager.LoadLevel(mapName);
                         _popupManager.Show(
@@ -99,35 +98,35 @@ public class GameManager
         {
             CurrentState = GameState.Editor;
         }
-        else if (_btnExit.IsClicked())
+        else if (_btnExit.IsClicked()) // exit
         {
             return false;
         }
         return true;
     }
 
-    private void HandleEditorInput()
+    private void HandleEditorInput() // editor state input
     {
-        if (Raylib.IsMouseButtonDown(MouseButton.Left))
+        if (Raylib.IsMouseButtonDown(MouseButton.Left)) // chosen tile in brush
         {
             _mapManager.UpdateTile(_cursor.ScreenPos, CurrentBrush);
         }
-        else if (Raylib.IsMouseButtonDown(MouseButton.Right))
+        else if (Raylib.IsMouseButtonDown(MouseButton.Right)) // default tile
         {
             _mapManager.UpdateTile(_cursor.ScreenPos, TileType.Grass);
         }
-        float wheel = Raylib.GetMouseWheelMove();
+        float wheel = Raylib.GetMouseWheelMove(); // brush tile change
         if (wheel != 0)
         {
             CycleBrush(wheel);
         }
-        if (Raylib.IsKeyPressed(KeyboardKey.S))
+        if (Raylib.IsKeyPressed(KeyboardKey.S)) // save popup
         {
             _popupManager.ShowSaveInput(
                 "Default",
                 (mapName) => 
                 {
-                    if (!string.IsNullOrWhiteSpace(mapName))
+                    if (!string.IsNullOrWhiteSpace(mapName)) // dynamic name saving
                     {
                         _mapManager.SaveLevel(mapName);
                         _popupManager.Show(
@@ -140,7 +139,7 @@ public class GameManager
                 () => { } 
             );
         }
-        if (Raylib.IsKeyPressed(KeyboardKey.Escape))
+        if (Raylib.IsKeyPressed(KeyboardKey.Escape)) // pause popup
         {
             _popupManager.ShowConfirmation(
                 "Return to Menu",
@@ -151,7 +150,7 @@ public class GameManager
         }
     }
 
-    private void CycleBrush(float wheelDirection)
+    private void CycleBrush(float wheelDirection) // brush choice function
     {
         var tileTypes = Enum.GetValues<TileType>();
         int currentIndex = Array.IndexOf(tileTypes, CurrentBrush);
@@ -166,7 +165,7 @@ public class GameManager
         CurrentBrush = tileTypes[currentIndex];
     }
 
-    public void Draw()
+    public void Draw() // display by state
     {
         switch (CurrentState)
         {
@@ -186,7 +185,7 @@ public class GameManager
         _popupManager.Draw();
     }
 
-    private void DrawMenu()
+    private void DrawMenu() // menu state display
     {
         Raylib.ClearBackground(Color.DarkBlue);
         
@@ -202,11 +201,11 @@ public class GameManager
         _btnExit.Draw();
     }
 
-    private void DrawPlayingState()
+    private void DrawPlayingState() // playing state display
     {
         _mapManager.DrawGrid();
         
-        Vector2 mouseTile = _mapManager.GetTileAtMouse();
+        Vector2 mouseTile = _cursor.GetTilePosition();
         int tileSize = _mapManager.TileSize;
         
         if (mouseTile.X >= 0 && mouseTile.X < _mapManager.Cols && 
@@ -222,14 +221,14 @@ public class GameManager
         }
     }
 
-    private void DrawEditorState()
+    private void DrawEditorState() // editor state display
     {
         _mapManager.DrawGrid();
         _cursor.DrawHoverPreview(CurrentState, CurrentBrush);
         DrawEditorUI();
     }
 
-    private void DrawEditorUI()
+    private void DrawEditorUI() // editor state instruction and brush
     {
         Raylib.DrawRectangle(5, 5, 200, 30, Raylib.Fade(Color.Black, 0.7f));
         string brushText = $"Brush: {CurrentBrush}";

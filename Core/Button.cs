@@ -9,15 +9,13 @@ public class Button(float x, float y, float width, float height, string text, Co
     private Color color = baseColor;
     private Color hoverColor = Raylib.ColorBrightness(baseColor, 0.2f);
     private bool isHovered;
-
-    public bool IsClicked()
+    public bool IsClicked() // click action
     {
         Vector2 mousePoint = Raylib.GetMousePosition();
         isHovered = Raylib.CheckCollisionPointRec(mousePoint, bounds);
         return isHovered && Raylib.IsMouseButtonPressed(MouseButton.Left);
     }
-
-    public void Draw()
+    public void Draw() // drawn button
     {
         Raylib.DrawRectangleRec(bounds, isHovered ? hoverColor : color);
         Raylib.DrawRectangleLinesEx(bounds, 2, Color.Black);
