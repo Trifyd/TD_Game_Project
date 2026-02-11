@@ -27,12 +27,12 @@ public class GameManager
     }
     public bool Update()
     {
+        _cursor.Update();
         if (_popupManager.IsVisible)
         {
             _popupManager.Update();
             return true;
         }
-        _cursor.Update();
         switch (CurrentState)
         {
             case GameState.Menu:
@@ -52,7 +52,8 @@ public class GameManager
         {
             Vector2 mouseTile = _cursor.GetTilePosition();
             if (mouseTile.X >= 0 && mouseTile.X < _mapManager.Cols && 
-                mouseTile.Y >= 0 && mouseTile.Y < _mapManager.Rows)
+                mouseTile.Y >= 0 && mouseTile.Y < _mapManager.Rows &&
+                _popupManager.IsVisible)
             {
                 // This were the tower placement logic and pop-up will happend
             }
@@ -117,11 +118,11 @@ public class GameManager
     }
     private void HandleEditorInput() // editor state input
     {
-        if (Raylib.IsMouseButtonDown(MouseButton.Left)) // chosen tile in brush
+        if (Raylib.IsMouseButtonDown(MouseButton.Left) && _popupManager.IsVisible) // chosen tile in brush
         {
             _mapManager.UpdateTile(_cursor.ScreenPos, CurrentBrush);
         }
-        else if (Raylib.IsMouseButtonDown(MouseButton.Right)) // default tile
+        else if (Raylib.IsMouseButtonDown(MouseButton.Right) && _popupManager.IsVisible) // default tile
         {
             _mapManager.UpdateTile(_cursor.ScreenPos, TileType.Grass);
         }
@@ -188,11 +189,15 @@ public class GameManager
                 break;
         }
         _popupManager.Draw();
+        if (_popupManager.IsVisible)
+        {
+            Raylib.DrawCircleV(_cursor.ScreenPos, 4, Color.White);
+        }
     }
     private void DrawMenu() // menu state display
     {
         Raylib.ClearBackground(Color.DarkBlue);
-        _cursor.DrawHoverPreview(CurrentState, CurrentBrush);
+        _cursor.DrawHoverPreview(CurrentState, CurrentBrush, _popupManager.IsVisible);
         string title = "TOWER DEFENSE: ZERO";
         int titleFontSize = 40;
         int titleWidth = Raylib.MeasureText(title, titleFontSize);
@@ -207,7 +212,7 @@ public class GameManager
     private void DrawPlayingState() // playing state display
     {
         _mapManager.DrawGrid();
-        _cursor.DrawHoverPreview(CurrentState, CurrentBrush);
+        _cursor.DrawHoverPreview(CurrentState, CurrentBrush, _popupManager.IsVisible);
         Vector2 mouseTile = _cursor.GetTilePosition();
         int tileSize = _mapManager.TileSize;
         
@@ -226,7 +231,7 @@ public class GameManager
     private void DrawEditorState() // editor state display
     {
         _mapManager.DrawGrid();
-        _cursor.DrawHoverPreview(CurrentState, CurrentBrush);
+        _cursor.DrawHoverPreview(CurrentState, CurrentBrush, _popupManager.IsVisible);
         DrawEditorUI();
     }
     private void DrawEditorUI() // editor state instruction and brush
