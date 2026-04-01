@@ -1,3 +1,9 @@
+this project will not be continued,
+I am not happy with what I have produced and don't have the motivation to redo the thing from scratch
+
+
+
+
 # TD_Game_Project
 
 a little tower defence game project in C# from scratch for windows and linux
